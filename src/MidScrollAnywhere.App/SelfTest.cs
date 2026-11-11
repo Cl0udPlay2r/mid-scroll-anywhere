@@ -94,6 +94,35 @@ internal static class SelfTest
         // 5. 滚轮消息投递（真让一个可滚动窗口滚动）
         Check("SendMessage(WM_MOUSEWHEEL) 能让可滚动窗口滚动", WheelDeliveryWorks(out string detail), detail);
 
+        // 6. 设置界面能构建（不显示，只强制创建句柄与布局）
+        string uiDir = Path.Combine(Path.GetTempPath(), "msw-ui-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var uiStore = new ConfigStore(uiDir);
+            using var controller = new Core.Autoscroll.AutoscrollController(uiStore, new Core.Logging.AppLog(Path.Combine(uiDir, "log.txt"), false));
+            using var form = new SettingsForm(controller);
+            form.CreateControl();
+            Check("设置窗口可构建", form.Controls.Count > 0, $"{form.Controls.Count} 个顶层控件");
+        }
+        catch (Exception ex)
+        {
+            Check("设置窗口可构建", false, ex.GetType().Name + ": " + ex.Message);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(uiDir))
+                {
+                    Directory.Delete(uiDir, recursive: true);
+                }
+            }
+            catch
+            {
+                // 忽略。
+            }
+        }
+
         foreach (string line in lines)
         {
             Console.WriteLine(line);
