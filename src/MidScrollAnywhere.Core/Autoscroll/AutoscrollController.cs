@@ -133,9 +133,18 @@ public sealed class AutoscrollController : IDisposable
         RestartSession();
     }
 
-    public bool AddForegroundToIgnore()
+    /// <summary>
+    /// 点"把当前前台程序加入忽略列表"时该针对哪个程序。
+    ///
+    /// 不能用 <see cref="ProcessClassifier.GetForegroundProcessName"/> 直接取：触发按钮的
+    /// 托盘菜单 / 设置窗口本身就是前台窗口，取到的永远是 midscrollanywhere.exe。
+    /// 优先用 <see cref="ForegroundTracker"/> 记下的最近一次外部前台程序。
+    /// </summary>
+    public string? ResolveIgnoreTarget() => ForegroundTracker.ResolveTarget();
+
+    /// <summary>把指定程序加入忽略列表；返回是否真的新增了。</summary>
+    public bool AddToIgnore(string? exe)
     {
-        string? exe = ProcessClassifier.GetForegroundProcessName();
         if (!IgnoreList.AddProcess(_config, exe))
         {
             return false;
@@ -145,6 +154,8 @@ public sealed class AutoscrollController : IDisposable
         _log.Info($"加入忽略列表：{exe}");
         return true;
     }
+
+    public bool AddForegroundToIgnore() => AddToIgnore(ResolveIgnoreTarget());
 
     // ---------------------------------------------------------------- 输入回调
 

@@ -2,6 +2,7 @@ using MidScrollAnywhere.Core.Anchors;
 using MidScrollAnywhere.Core.Autoscroll;
 using MidScrollAnywhere.Core.Config;
 using MidScrollAnywhere.Core.Curves;
+using MidScrollAnywhere.Core.Guards;
 using MidScrollAnywhere.Core.Logging;
 
 namespace MidScrollAnywhere.App;
@@ -26,6 +27,9 @@ internal sealed class TrayContext : ApplicationContext
         _controller = new AutoscrollController(store, log);
         _controller.StateChanged += OnStateChanged;
         _controller.Start();
+
+        // 记录"用户最近一次真正在用的程序"，否则点"加入忽略列表"时前台窗口是本工具自己。
+        ForegroundTracker.Start();
 
         _enabledItem = new ToolStripMenuItem("启用", null, (_, _) => ToggleEnabled()) { CheckOnClick = false };
         _chromiumItem = new ToolStripMenuItem("Chromium 曲线（Chrome / Edge）", null, (_, _) => SetProfile(CurveProfiles.Chromium));
@@ -106,11 +110,22 @@ internal sealed class TrayContext : ApplicationContext
 
     private void IgnoreForeground()
     {
-        bool added = _controller.AddForegroundToIgnore();
+        string? exe = _controller.ResolveIgnoreTarget();
+        if (string.IsNullOrEmpty(exe))
+        {
+            _icon.ShowBalloonTip(
+                3000,
+                "Mid Scroll Anywhere",
+                "没拿到要忽略的程序：先切到目标程序，再点这里。",
+                ToolTipIcon.Warning);
+            return;
+        }
+
+        bool added = _controller.AddToIgnore(exe);
         _icon.ShowBalloonTip(
             3000,
             "Mid Scroll Anywhere",
-            added ? "已加入忽略列表。" : "该程序已在忽略列表里。",
+            added ? $"已加入忽略列表：{exe}" : $"{exe} 已在忽略列表里。",
             ToolTipIcon.Info);
         UpdateMenu();
     }
@@ -172,6 +187,7 @@ internal sealed class TrayContext : ApplicationContext
     private void ExitApp()
     {
         _icon.Visible = false;
+        ForegroundTracker.Stop();
         _controller.Dispose();
         ExitThread();
     }
@@ -180,6 +196,7 @@ internal sealed class TrayContext : ApplicationContext
     {
         if (disposing)
         {
+            ForegroundTracker.Stop();
             _icon.Visible = false;
             _icon.Dispose();
             _trayIcon?.Dispose();

@@ -128,6 +128,13 @@ internal static class SelfTest
             }
 
             Check("分组内控件不越界", overflowing.Count == 0, string.Join(", ", overflowing));
+
+            // 回归：点"加入忽略列表"时前台窗口是本工具自己，取到的目标不能是自己。
+            string? ignoreTarget = controller.ResolveIgnoreTarget();
+            Check(
+                "忽略目标不会取到自己",
+                !string.Equals(ignoreTarget, ProcessClassifier.SelfProcessName, StringComparison.OrdinalIgnoreCase),
+                ignoreTarget ?? "(null)");
         }
         catch (Exception ex)
         {

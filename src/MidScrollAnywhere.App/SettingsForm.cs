@@ -40,6 +40,14 @@ internal sealed class SettingsForm : Form
     private readonly ListBox _ignoreList = new() { Width = 300, Height = 120, IntegralHeight = false };
     private readonly Label _hint = new() { AutoSize = true, MaximumSize = new Size(560, 0), ForeColor = SystemColors.GrayText };
 
+    private readonly Label _ignoreStatus = new()
+    {
+        AutoSize = true,
+        MaximumSize = new Size(560, 0),
+        ForeColor = SystemColors.GrayText,
+        Text = "添加的是你最近用过的那个程序（点这个按钮时前台窗口是本工具自己）。",
+    };
+
     public SettingsForm(AutoscrollController controller)
     {
         _controller = controller;
@@ -193,6 +201,7 @@ internal sealed class SettingsForm : Form
         panel.Controls.Add(buttons);
 
         AddRow(grid, "不生效的程序", panel);
+        AddRow(grid, string.Empty, _ignoreStatus);
         return FinishGroup(group, grid);
     }
 
@@ -330,18 +339,17 @@ internal sealed class SettingsForm : Form
 
     private void AddForeground()
     {
-        string? exe = ProcessClassifier.GetForegroundProcessName();
+        // 不能用 GetForegroundProcessName()：点这个按钮时前台窗口就是这个设置窗口。
+        string? exe = _controller.ResolveIgnoreTarget();
         if (string.IsNullOrEmpty(exe))
         {
-            MessageBox.Show(this, "拿不到前台程序名。", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _ignoreStatus.Text = "没有可添加的程序：先切到目标程序点一下，再回来点这里。";
             return;
         }
 
-        if (!_draft.Ignore.Processes.Contains(exe, StringComparer.OrdinalIgnoreCase))
-        {
-            _draft.Ignore.Processes.Add(exe);
-            RefreshIgnoreList();
-        }
+        bool added = IgnoreList.AddProcess(_draft, exe);
+        _ignoreStatus.Text = added ? $"已添加：{exe}" : $"已在列表中：{exe}";
+        RefreshIgnoreList();
     }
 
     private void RemoveSelected()

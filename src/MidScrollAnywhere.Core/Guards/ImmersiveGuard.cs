@@ -45,6 +45,10 @@ public static class ProcessClassifier
 
     public static string? GetForegroundProcessName() => GetProcessName(Win32.GetForegroundWindow());
 
+    /// <summary>本进程自己的 exe 名（小写），用来把"忽略自己"排除掉。</summary>
+    public static string SelfProcessName =>
+        Path.GetFileName(Environment.ProcessPath ?? string.Empty).ToLowerInvariant();
+
     public static string? GetFullPath(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero)
