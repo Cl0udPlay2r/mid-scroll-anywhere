@@ -1,4 +1,4 @@
-# 跑单元测试：.\scripts\test.ps1
+# Run unit tests: .\scripts\test.ps1
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 

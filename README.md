@@ -9,6 +9,12 @@
 
 ---
 
+## 下载
+
+[Releases](https://github.com/Cl0udPlay2r/mid-scroll-anywhere/releases) 页面下载 `MidScrollAnywhere.exe`，双击即用（单文件、自带运行时、无需安装 .NET）。
+
+---
+
 ## 快速开始
 
 1. 双击 `dist\MidScrollAnywhere.exe`，托盘出现一个圆形四箭头图标（无主窗口）。
@@ -112,6 +118,15 @@ dotnet publish src\MidScrollAnywhere.App -c Release -r win-x64 --self-contained 
 ```
 
 需要 .NET 8 SDK（`global.json` 锚定 8.0.428，`latestFeature` 允许更高补丁版）。发布产物是单个 `MidScrollAnywhere.exe`（约 140 MB，自带运行时，拷走即用）。
+
+## 发版
+
+```powershell
+.\scripts\gh-release.ps1     # 建 release + 更新简介/topics + 上传 exe（凭据取自 Git 凭据管理器）
+.\scripts\upload-asset.ps1   # 只重传 exe（curl 流式上传，断点重试更稳）
+```
+
+release 文案在 `release/notes-v0.1.0.md`，标题在 `release/title.txt`，仓库简介在 `release/description.txt` —— 改文案不用改脚本。
 
 ## 目录
 

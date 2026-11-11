@@ -1,4 +1,4 @@
-# 一步构建：.\scripts\build.ps1 [-Release]
+# Build: .\scripts\build.ps1 [-Release]
 param([switch]$Release)
 
 $ErrorActionPreference = 'Stop'

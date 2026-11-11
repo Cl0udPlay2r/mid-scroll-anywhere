@@ -1,4 +1,5 @@
-# 发布便携版到 .\dist（自带运行时，单个 exe）：.\scripts\publish.ps1
+# Publish portable single-file exe into .\dist, then run the self-test:
+#   .\scripts\publish.ps1
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 
@@ -14,7 +15,7 @@ try {
     }
 
     Write-Host ''
-    Write-Host '构建完成，自检中…' -ForegroundColor Cyan
+    Write-Host 'Published to dist\. Running self-test...' -ForegroundColor Cyan
     & ./dist/MidScrollAnywhere.exe --selftest
     exit $LASTEXITCODE
 }
