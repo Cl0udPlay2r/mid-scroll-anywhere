@@ -60,7 +60,8 @@ try {
     $body = if (Test-Path $Notes) { (Get-Content $Notes -Raw -Encoding utf8) } else { '' }
 
     $hash = (Get-FileHash $Asset -Algorithm SHA256).Hash.ToLowerInvariant()
-    $body += "`n`n### SHA256`n`````` `n$hash  MidScrollAnywhere.exe`n``````n"
+    $fence = '```'
+    $body = $body.TrimEnd() + "`n`n### SHA256`n$fence`n$hash  MidScrollAnywhere.exe`n$fence`n"
 
     $releaseBody = @{
         tag_name         = $Tag
