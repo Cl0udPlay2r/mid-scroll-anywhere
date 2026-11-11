@@ -2,10 +2,10 @@
 # description + topics. Token comes from the Git credential store (never printed).
 #   .\scripts\gh-release.ps1
 param(
-    [string]$Tag = 'v0.1.0',
+    [string]$Tag = 'v0.1.1',
     [string]$Repo = 'Cl0udPlay2r/mid-scroll-anywhere',
     [string]$Asset = 'dist/MidScrollAnywhere.exe',
-    [string]$Notes = 'release/notes-v0.1.0.md',
+    [string]$Notes = 'release/notes-v0.1.1.md',
     [string]$TitleFile = 'release/title.txt',
     [string]$DescriptionFile = 'release/description.txt',
     [string]$Branch = 'master'

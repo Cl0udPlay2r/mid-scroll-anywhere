@@ -104,7 +104,7 @@ MidScrollAnywhere.exe --selftest
 
 ```powershell
 .\scripts\build.ps1              # 编译
-.\scripts\test.ps1               # 51 个单元测试（曲线采样点、累积器、守卫真值表、配置往返）
+.\scripts\test.ps1               # 55 个单元测试（曲线采样点、累积器、守卫真值表、配置往返、前台程序过滤）
 .\scripts\publish.ps1            # 发布到 dist\ 并自动跑一遍自检
 ```
 
@@ -126,7 +126,7 @@ dotnet publish src\MidScrollAnywhere.App -c Release -r win-x64 --self-contained 
 .\scripts\upload-asset.ps1   # 只重传 exe（curl 流式上传，断点重试更稳）
 ```
 
-release 文案在 `release/notes-v0.1.0.md`，标题在 `release/title.txt`，仓库简介在 `release/description.txt` —— 改文案不用改脚本。
+release 文案在 `release/notes-v0.1.1.md`，标题在 `release/title.txt`，仓库简介在 `release/description.txt` —— 改文案不用改脚本。
 
 ## 目录
 
