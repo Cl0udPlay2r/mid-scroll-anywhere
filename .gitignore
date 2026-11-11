@@ -1,6 +1,16 @@
+# 构建产物
 bin/
 obj/
 dist/
+TestResults/
+
+# 编辑器 / IDE
 .vs/
+.idea/
 *.user
+*.suo
+
+# 本地临时文件
+*.log
 *.bak
+*.tmp

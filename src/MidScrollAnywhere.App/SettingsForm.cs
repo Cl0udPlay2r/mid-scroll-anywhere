@@ -134,7 +134,6 @@ internal sealed class SettingsForm : Form
 
         _hint.Text = "浏览器之外无法做到 100% 相同的连续像素滚动：滚轮 Delta 以 120 为一格，"
             + "一格滚多少像素由目标程序自己决定。这里给出的是最接近的近似。"
-
             + Environment.NewLine + Environment.NewLine
             + "· 最小发送单位越小越平滑（15 起），只认整格的老程序请勾\"只发整格\"。"
             + Environment.NewLine

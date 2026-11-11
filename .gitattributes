@@ -1,0 +1,14 @@
+# 统一换行符，避免每次克隆都出现 LF/CRLF 噪音
+* text=auto eol=crlf
+
+*.cs     text diff=csharp
+*.csproj text diff=xml
+*.props  text diff=xml
+*.targets text diff=xml
+*.ps1    text eol=crlf
+*.sh     text eol=lf
+*.sln    text eol=crlf
+
+*.png binary
+*.ico binary
+*.exe binary

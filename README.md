@@ -97,13 +97,21 @@ MidScrollAnywhere.exe --selftest
 ## 构建
 
 ```powershell
-dotnet build                      # 编译
-dotnet test                       # 51 个单元测试（曲线采样点、累积器、守卫真值表、配置往返）
+.\scripts\build.ps1              # 编译
+.\scripts\test.ps1               # 51 个单元测试（曲线采样点、累积器、守卫真值表、配置往返）
+.\scripts\publish.ps1            # 发布到 dist\ 并自动跑一遍自检
+```
+
+或者手写命令：
+
+```powershell
+dotnet build
+dotnet test
 dotnet publish src\MidScrollAnywhere.App -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
 ```
 
-需要 .NET 8 SDK。发布产物是单个 `MidScrollAnywhere.exe`（约 140 MB，自带运行时，拷走即用）。
+需要 .NET 8 SDK（`global.json` 锚定 8.0.428，`latestFeature` 允许更高补丁版）。发布产物是单个 `MidScrollAnywhere.exe`（约 140 MB，自带运行时，拷走即用）。
 
 ## 目录
 
@@ -118,6 +126,7 @@ src/MidScrollAnywhere.Core     纯逻辑 + Win32 互操作
   Autoscroll/     状态机与取消规则
 src/MidScrollAnywhere.App      WinForms 托盘 + 设置界面
 tests/MidScrollAnywhere.Tests  xUnit
+scripts/                       build / test / publish 脚本
 ```
 
 ## 验收清单（对着 Chrome 并排比）
