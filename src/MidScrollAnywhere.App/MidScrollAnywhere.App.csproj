@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>MidScrollAnywhere.App</RootNamespace>
+    <AssemblyName>MidScrollAnywhere</AssemblyName>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 清单里的 PerMonitorV2 是给 Win32 调用用的；WFAC010 只认 ApplicationHighDpiMode 属性，这里静音。 -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <RollForward>LatestMajor</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MidScrollAnywhere.Core\MidScrollAnywhere.Core.csproj" />
+  </ItemGroup>
+
+</Project>

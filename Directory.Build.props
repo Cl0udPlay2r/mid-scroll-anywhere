@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <Version>0.1.0</Version>
+    <Company>mid-scroll-anywhere</Company>
+    <Product>Mid Scroll Anywhere</Product>
+    <NeutralLanguage>zh-Hans</NeutralLanguage>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>
