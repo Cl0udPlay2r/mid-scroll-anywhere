@@ -13,8 +13,8 @@ internal sealed class SettingsForm : Form
     private readonly AppConfig _draft;
 
     private readonly CheckBox _enabled = new() { Text = "启用中键自动滚动", AutoSize = true };
-    private readonly ComboBox _profile = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
-    private readonly ComboBox _switchTiming = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+    private readonly ComboBox _profile = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 360 };
+    private readonly ComboBox _switchTiming = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 360 };
     private readonly NumericUpDown _speed = new() { DecimalPlaces = 2, Increment = 0.05m, Minimum = 0.2m, Maximum = 3m, Width = 90 };
     private readonly CheckBox _horizontal = new() { Text = "允许横向滚动", AutoSize = true };
     private readonly CheckBox _autostart = new() { Text = "开机启动", AutoSize = true };
@@ -25,8 +25,8 @@ internal sealed class SettingsForm : Form
     private readonly NumericUpDown _lineHeight = new() { DecimalPlaces = 1, Minimum = 6, Maximum = 80, Increment = 1, Width = 90 };
     private readonly CheckBox _overrideLines = new() { Text = "覆盖系统每格行数", AutoSize = true };
     private readonly NumericUpDown _lines = new() { Minimum = 1, Maximum = 20, Increment = 1, Width = 90 };
-    private readonly ComboBox _wheelTarget = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
-    private readonly ComboBox _anchorStyle = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+    private readonly ComboBox _wheelTarget = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 360 };
+    private readonly ComboBox _anchorStyle = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 360 };
 
     private readonly CheckBox _swallowKeys = new() { Text = "滚动期间吞掉按键（Chrome 行为；会占用你的快捷键）", AutoSize = true };
     private readonly CheckBox _swallowStopClick = new() { Text = "吞掉用于停止的那次点击", AutoSize = true };
@@ -37,8 +37,8 @@ internal sealed class SettingsForm : Form
     private readonly CheckBox _guardBorderless = new() { Text = "无边框全屏窗口", AutoSize = true };
     private readonly CheckBox _guardLearned = new() { Text = "启用自动学习名单", AutoSize = true };
 
-    private readonly ListBox _ignoreList = new() { Width = 380, Height = 120, IntegralHeight = false };
-    private readonly Label _hint = new() { AutoSize = true, MaximumSize = new Size(600, 0), ForeColor = SystemColors.GrayText };
+    private readonly ListBox _ignoreList = new() { Width = 300, Height = 120, IntegralHeight = false };
+    private readonly Label _hint = new() { AutoSize = true, MaximumSize = new Size(560, 0), ForeColor = SystemColors.GrayText };
 
     public SettingsForm(AutoscrollController controller)
     {
@@ -47,8 +47,12 @@ internal sealed class SettingsForm : Form
 
         Text = "Mid Scroll Anywhere · 设置";
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(660, 780);
-        MinimumSize = new Size(560, 480);
+
+        // 内容固定按 620px 宽排版（见 MakeGroup），窗口初始尺寸按屏幕工作区收一下，
+        // 免得在 1366×768 这类小屏上底部按钮被任务栏盖住。
+        Rectangle work = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 1280, 800);
+        ClientSize = new Size(Math.Min(660, work.Width - 40), Math.Min(780, work.Height - 60));
+        MinimumSize = new Size(GroupWidth + 56, 320);
         ShowInTaskbar = true;
         MaximizeBox = false;
 
@@ -71,12 +75,13 @@ internal sealed class SettingsForm : Form
         {
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
-            Height = 44,
+            Height = 48,
             Padding = new Padding(8),
         };
-        var save = new Button { Text = "保存", DialogResult = DialogResult.None, Width = 90 };
-        var cancel = new Button { Text = "取消", Width = 90 };
-        var openFolder = new Button { Text = "打开配置目录", Width = 120 };
+        // 按钮按文字自适应宽度：字体是"点"、会随系统缩放变大，写死像素宽度在 150% 下会把字截断。
+        var save = new AutoSizeButton("保存") { DialogResult = DialogResult.None };
+        var cancel = new AutoSizeButton("取消");
+        var openFolder = new AutoSizeButton("打开配置目录");
         save.Click += (_, _) => SaveAndClose();
         cancel.Click += (_, _) => Close();
         openFolder.Click += (_, _) => OpenConfigFolder();
@@ -113,8 +118,7 @@ internal sealed class SettingsForm : Form
         AddRow(grid, string.Empty, _horizontal);
         AddRow(grid, string.Empty, _autostart);
 
-        group.Controls.Add(grid);
-        return group;
+        return FinishGroup(group, grid);
     }
 
     private GroupBox BuildFeelGroup()
@@ -139,8 +143,7 @@ internal sealed class SettingsForm : Form
             + Environment.NewLine
             + "· 行高 × 每格行数 = 一格的像素数，用于把像素速度折算成滚轮格数。";
 
-        group.Controls.Add(grid);
-        return group;
+        return FinishGroup(group, grid);
     }
 
     private GroupBox BuildBehaviorGroup()
@@ -149,8 +152,7 @@ internal sealed class SettingsForm : Form
         var grid = MakeGrid();
         AddRow(grid, string.Empty, _swallowKeys);
         AddRow(grid, string.Empty, _swallowStopClick);
-        group.Controls.Add(grid);
-        return group;
+        return FinishGroup(group, grid);
     }
 
     private GroupBox BuildGuardGroup()
@@ -162,8 +164,7 @@ internal sealed class SettingsForm : Form
         AddRow(grid, string.Empty, _guardCursorConfined);
         AddRow(grid, string.Empty, _guardBorderless);
         AddRow(grid, string.Empty, _guardLearned);
-        group.Controls.Add(grid);
-        return group;
+        return FinishGroup(group, grid);
     }
 
     private GroupBox BuildIgnoreGroup()
@@ -172,66 +173,99 @@ internal sealed class SettingsForm : Form
         var grid = MakeGrid();
 
         var buttons = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false };
-        var add = new Button { Text = "添加当前前台程序", Width = 160 };
-        var remove = new Button { Text = "从列表移除选中项", Width = 160 };
-        var clearLearned = new Button { Text = "清空自动学习名单", Width = 160 };
+        var add = new AutoSizeButton("添加当前前台程序");
+        var remove = new AutoSizeButton("从列表移除选中项");
+        var clearLearned = new AutoSizeButton("清空自动学习名单");
         add.Click += (_, _) => AddForeground();
         remove.Click += (_, _) => RemoveSelected();
         clearLearned.Click += (_, _) => ClearLearned();
         buttons.Controls.Add(add);
         buttons.Controls.Add(remove);
         buttons.Controls.Add(clearLearned);
+        EqualizeWidths(add, remove, clearLearned);
+
+        // 列表宽度按"分组内宽 - 标签列 - 按钮列"算，按钮宽度是随 DPI 变的，不能写死。
+        int buttonWidth = Math.Max(add.PreferredSize.Width, Math.Max(remove.PreferredSize.Width, clearLearned.PreferredSize.Width));
+        _ignoreList.Width = Math.Max(180, GroupInnerWidth - LabelColumnWidth - buttonWidth - 24);
 
         var panel = new FlowLayoutPanel { AutoSize = true, WrapContents = false };
         panel.Controls.Add(_ignoreList);
         panel.Controls.Add(buttons);
 
         AddRow(grid, "不生效的程序", panel);
-        group.Controls.Add(grid);
-        return group;
+        return FinishGroup(group, grid);
     }
 
+    private const int GroupWidth = 620;
+    private const int LabelColumnWidth = 130;
+
+    // 分组内可用宽度（GroupBox 四周各 8px 内边距）。
+    private const int GroupInnerWidth = GroupWidth - 16;
+
+    // 注意：分组刻意**不**用 AutoSize。
+    // 分组里装的是 Dock=Top 的 TableLayoutPanel，它的宽度取自父分组；而 AutoSize 分组的
+    // 宽度又取自内容。两边互等，WinForms 把这个循环解成 0 → 分组被压成 16px 宽、
+    // 每个字占一行（看起来像竖排）。所以宽度写死，高度在 FinishGroup 里按布局结果算。
     private static GroupBox MakeGroup(string title) => new()
     {
         Text = title,
-        AutoSize = true,
-        AutoSizeMode = AutoSizeMode.GrowAndShrink,
-        Width = 620,
+        AutoSize = false,
+        Width = GroupWidth,
         Padding = new Padding(8, 4, 8, 8),
         Margin = new Padding(0, 0, 0, 10),
     };
 
-    private static TableLayoutPanel MakeGrid() => new()
+    private static TableLayoutPanel MakeGrid()
     {
-        ColumnCount = 2,
-        RowCount = 0,
-        AutoSize = true,
-        AutoSizeMode = AutoSizeMode.GrowAndShrink,
-        Dock = DockStyle.Top,
-    };
+        var grid = new TableLayoutPanel
+        {
+            ColumnCount = 2,
+            RowCount = 0,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Top,
+        };
+
+        // 标签列固定宽度：各组之间控件起始位置才对得齐。
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, LabelColumnWidth));
+        grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        return grid;
+    }
+
+    private static GroupBox FinishGroup(GroupBox group, TableLayoutPanel grid)
+    {
+        group.Controls.Add(grid);
+
+        // 宽度已定，先跑一次布局让 TableLayoutPanel 算出自己的高度，再据此定分组高度。
+        group.PerformLayout();
+        grid.PerformLayout();
+        group.Height = grid.Bottom + group.Padding.Bottom;
+
+        return group;
+    }
 
     private static void AddRow(TableLayoutPanel grid, string label, Control control)
     {
         int row = grid.RowCount;
         grid.RowCount = row + 1;
         grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        if (!string.IsNullOrEmpty(label))
+        control.Margin = new Padding(0, 4, 0, 4);
+
+        if (string.IsNullOrEmpty(label))
         {
-            grid.Controls.Add(new Label
-            {
-                Text = label,
-                AutoSize = true,
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 8, 12, 4),
-            }, 0, row);
-        }
-        else
-        {
-            grid.Controls.Add(new Label { Text = string.Empty, AutoSize = true, Width = 0, Margin = new Padding(0) }, 0, row);
-            grid.SetColumnSpan(control, 1);
+            // 没有标签的行（勾选框、提示文字）横跨两列，从最左边开始，别跟着标签列的缩进走。
+            grid.Controls.Add(control, 0, row);
+            grid.SetColumnSpan(control, 2);
+            return;
         }
 
-        control.Margin = new Padding(0, 4, 0, 4);
+        grid.Controls.Add(new Label
+        {
+            Text = label,
+            AutoSize = true,
+            Anchor = AnchorStyles.Left,
+            Margin = new Padding(0, 8, 12, 4),
+        }, 0, row);
         grid.Controls.Add(control, 1, row);
     }
 
@@ -401,4 +435,34 @@ internal sealed class SettingsForm : Form
     }
 
     private static decimal Clamp(decimal value, decimal min, decimal max) => Math.Min(Math.Max(value, min), max);
+
+    private static void EqualizeWidths(params Button[] buttons)
+    {
+        int width = 0;
+        foreach (Button button in buttons)
+        {
+            width = Math.Max(width, button.PreferredSize.Width);
+        }
+
+        foreach (Button button in buttons)
+        {
+            button.MinimumSize = new Size(width, 0);
+        }
+    }
+
+    /// <summary>
+    /// 宽度跟着文字走的按钮。字体以"点"为单位、会随系统缩放变大，而控件尺寸是像素，
+    /// 所以写死宽度会在 150% 缩放下把按钮文字截断。
+    /// </summary>
+    private sealed class AutoSizeButton : Button
+    {
+        public AutoSizeButton(string text)
+        {
+            Text = text;
+            AutoSize = true;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            Padding = new Padding(12, 2, 12, 2);
+            MinimumSize = new Size(80, 0);
+        }
+    }
 }

@@ -94,7 +94,7 @@ internal static class SelfTest
         // 5. 滚轮消息投递（真让一个可滚动窗口滚动）
         Check("SendMessage(WM_MOUSEWHEEL) 能让可滚动窗口滚动", WheelDeliveryWorks(out string detail), detail);
 
-        // 6. 设置界面能构建（不显示，只强制创建句柄与布局）
+        // 6. 设置界面能构建，且布局不塌陷（回归：分组曾被压成 16px 宽、每个字占一行）
         string uiDir = Path.Combine(Path.GetTempPath(), "msw-ui-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -102,7 +102,32 @@ internal static class SelfTest
             using var controller = new Core.Autoscroll.AutoscrollController(uiStore, new Core.Logging.AppLog(Path.Combine(uiDir, "log.txt"), false));
             using var form = new SettingsForm(controller);
             form.CreateControl();
+            form.PerformLayout();
+
             Check("设置窗口可构建", form.Controls.Count > 0, $"{form.Controls.Count} 个顶层控件");
+
+            var groups = form.Controls.OfType<FlowLayoutPanel>()
+                .SelectMany(p => p.Controls.OfType<GroupBox>())
+                .ToList();
+
+            Check(
+                "设置窗口分组宽度未塌陷",
+                groups.Count == 5 && groups.All(g => g.Width >= 500),
+                string.Join(", ", groups.Select(g => $"{g.Text}={g.Width}px")));
+
+            var overflowing = new List<string>();
+            foreach (GroupBox group in groups)
+            {
+                foreach (Control row in group.Controls.Cast<Control>().SelectMany(c => c.Controls.Cast<Control>()))
+                {
+                    if (row.Right > group.ClientSize.Width)
+                    {
+                        overflowing.Add($"{group.Text}/{row.GetType().Name}");
+                    }
+                }
+            }
+
+            Check("分组内控件不越界", overflowing.Count == 0, string.Join(", ", overflowing));
         }
         catch (Exception ex)
         {
